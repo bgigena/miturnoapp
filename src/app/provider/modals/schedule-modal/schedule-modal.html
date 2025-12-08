@@ -1,0 +1,51 @@
+@if (isModalVisible()) {
+<div class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+
+    <div class="bg-white card w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+
+        <section>
+            <h4 class="text-xl font-semibold mb-4 pb-2">Días de Excepción / Cierres Especiales</h4>
+
+            <div class="flex justify-between items-center mb-4 p-2 bg-gray-50 rounded-md">
+                <button (click)="goToToday()" class="text-indigo-600 hover:text-indigo-800 font-medium">Hoy</button>
+                <div class="flex items-center">
+                    <button (click)="prevMonth()" class="p-1 hover:bg-gray-200 rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                    <h5 class="mx-3 text-lg font-semibold">{{ viewDate() | date:'MMMM yyyy' }}</h5>
+                    <button (click)="nextMonth()" class="p-1 hover:bg-gray-200 rounded">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                            <path fill-rule="evenodd"
+                                d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z"
+                                clip-rule="evenodd" />
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <mwl-calendar-month-view [viewDate]="viewDate()" (viewDateChange)="setViewDate($event)"
+                [events]="calendarEvents" (dayClicked)="dayClicked($event)" [activeDayIsOpen]="activeDay()"
+                [activeDay]="day()" >
+            </mwl-calendar-month-view>
+            <form (ngSubmit)="saveSchedule()" class="space-y-8">
+
+                <div class="flex justify-end space-x-3 pt-4 border-t">
+                    <button type="button" (click)="closeModal()"
+                        class="text-gray-600 border border-gray-300 p-3 rounded-xl hover:bg-gray-100 transition font-medium">
+                        Cancelar
+                    </button>
+                    <button type="submit"
+                        class="bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition font-medium">
+                        Guardar Cambios
+                    </button>
+                </div>
+            </form>
+        </section>
+
+    </div>
+</div>
+}
