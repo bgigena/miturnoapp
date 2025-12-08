@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    ports:
+      - "4000:4000"
+    environment:
+      - PORT=4000
+    restart: always
+
+  # Optional: Cloudflare Tunnel Sidecar Example
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    # command: tunnel run
+    # environment:
+    #   - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    # Quick Tunnel (Testing only - Random URL)
+    command: tunnel --url http://app:4000 --no-autoupdate
