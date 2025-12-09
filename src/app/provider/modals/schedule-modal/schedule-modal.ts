@@ -1,18 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, input, output, signal } from '@angular/core';
+import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { CalendarModule, CalendarEvent, CalendarMonthViewDay } from 'angular-calendar';
+import { startOfDay, isSameDay, addMonths, subMonths } from 'date-fns';
+import { Subject } from 'rxjs';
 
-import { CalendarModule, CalendarEvent, CalendarView } from 'angular-calendar';
-import { startOfDay, endOfDay, isSameDay, isSameMonth, addMonths, subMonths } from 'date-fns';
-
-// Definición de las estructuras de datos
-interface RecurrentSchedule {
-  day: 'Lunes' | 'Martes' | 'Miércoles' | 'Jueves' | 'Viernes' | 'Sábado' | 'Domingo';
-  enabled: boolean;
-  start: string; // Ej: '10:00'
-  end: string;   // Ej: '20:00'
-}
-
+// Definición de la estructura de datos
 interface Exception {
   id: number;
   date: string; // Ej: '2025-12-25'
@@ -24,46 +17,55 @@ interface Exception {
   imports: [CommonModule, FormsModule, CalendarModule],
   templateUrl: './schedule-modal.html',
   styleUrl: './schedule-modal.css',
+  changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class ScheduleModal {
+
+  refresh = new Subject<void>();
+  private cdr = inject(ChangeDetectorRef);
 
   isModalVisible = input(false);
   modalClosed = output<void>();
 
-  activeDay = signal(false);
-  day = signal(new Date());
-  // Configuración del calendario
-  view: CalendarView = CalendarView.Month;
-  viewDate = signal(new Date()); // Fecha actual del calendario
+  activeDay = signal<boolean>(false);
+  day = signal<Date | null>(new Date());
+  viewDate = signal(startOfDay(new Date()));
+  showGlobalForm = signal<boolean>(false);
 
-  // Excepciones (Mapeadas a CalendarEvent)
+  // Excepciones
   exceptions = signal<Exception[]>([
     { id: 1, date: '2025-12-24', reason: 'Nochebuena' },
-    { id: 2, date: '2025-12-31', reason: 'Inventario' },
+    { id: 2, date: '2025-12-30', reason: 'Inventario' },
+    { id: 3, date: '2025-12-31', reason: 'Vispera Año nuevo' },
   ]);
 
   // Datos para agregar una nueva excepción
   newExceptionDate: Date | null = null;
   newExceptionReason: string = '';
+  isSameDay = (arg0: Date, arg1: any) => isSameDay(arg0, arg1);
 
-  // Mapa las excepciones a eventos que el calendario puede renderizar
-  get calendarEvents(): CalendarEvent[] {
-    return this.exceptions().map(e => ({
-      start: startOfDay(new Date(e.date)),
-      end: endOfDay(new Date(e.date)),
-      title: `CERRADO: ${e.reason}`,
-      color: { primary: '#dc2626', secondary: '#fecaca' }, // Rojo
-      allDay: true,
-      id: e.id,
-    }));
-  }
+  // Mapa las excepciones a eventos (con corrección para Zona Horaria)
+  calendarEvents = computed<CalendarEvent[]>(() => {
+    return this.exceptions().map(e => {
+      const parts = e.date.split('-');
+      const year = Number(parts[0]);
+      const monthIndex = Number(parts[1]) - 1;
+      const day = Number(parts[2]);
 
-  // Horario Recurrente (se mantiene igual)
-  schedule: RecurrentSchedule[] = [
-    // ... (datos del horario semanal) ...
-  ];
+      // Crea la fecha en la zona horaria local para evitar retrocesos de día
+      const localDate = new Date(year, monthIndex, day);
 
-  constructor() { }
+      return {
+        start: startOfDay(localDate),
+        title: `CERRADO: ${e.reason}`,
+        color: { primary: '#dc2626', secondary: '#fecaca' },
+        allDay: true,
+        id: e.id,
+        meta: { originalException: e }
+      } as CalendarEvent;
+    });
+  });
+
 
   setViewDate(newDate: Event): void {
     if (newDate instanceof Date) {
@@ -72,58 +74,128 @@ export class ScheduleModal {
       console.error('Error: El valor proporcionado no es un objeto Date válido.');
     }
   }
-  // Métodos de control del Modal (closeModal, saveSchedule) se mantienen.
+
   goToToday(): void {
     this.viewDate.set(new Date());
   }
-  // Método para navegar al mes anterior
+
   prevMonth(): void {
     this.viewDate.set(subMonths(this.viewDate(), 1));
   }
 
-  // Método para navegar al mes siguiente
   nextMonth(): void {
     this.viewDate.set(addMonths(this.viewDate(), 1));
   }
-  // ⬇️ Nuevo: Manejar clic en una fecha del calendario ⬇️
-  dayClicked({ day }: { day: { date: Date, events: CalendarEvent[] } }): void {
-    // ⬇️ Extraemos date y events directamente de 'day' ⬇️
-    const { date, events } = day;
-    this.day.set(date);
-    this.activeDay.set(!this.activeDay());
-    // Si ya existe un evento ese día, permitimos eliminarlo o ver detalles
-    if (events.length > 0) {
-      // Si la fecha ya tiene eventos, limpiamos la selección para forzar al usuario a eliminar
-      this.newExceptionDate = null;
-      this.newExceptionReason = '';
+
+  cancelNewException(): void {
+    this.newExceptionDate = null;
+    this.newExceptionReason = '';
+
+    this.showGlobalForm.set(false); // Cierra el formulario global
+    this.activeDay.set(false);
+    this.day.set(null);
+    this.refresh.next();
+  }
+
+  dayClicked({ day }: { day: CalendarMonthViewDay }): void {
+
+    const clickedDate = new Date(day.date.getFullYear(), day.date.getMonth(), day.date.getDate());
+    const currentDay = this.day();
+    const isSameDate = currentDay && isSameDay(currentDay, clickedDate);
+
+    const hasEvents = day.events && day.events.length > 0;
+
+    if (isSameDate) {
+      this.activeDay.update(isOpen => {
+        if (isOpen) {
+          this.day.set(null);
+          this.showGlobalForm.set(false);
+        }
+        return !isOpen;
+      });
+
+    } else {
+      this.day.set(clickedDate);
+      this.newExceptionDate = clickedDate;
+
+      if (hasEvents) {
+        this.activeDay.set(true);
+        this.showGlobalForm.set(false);
+      } else {
+        this.activeDay.set(false);
+        this.showGlobalForm.set(true);
+      }
+    }
+
+    this.refresh.next();
+    this.cdr.detectChanges();
+  }
+
+  addException(): void {
+    if (!this.newExceptionReason.trim() || !this.newExceptionDate) {
       return;
     }
 
-    // Si la fecha es nueva, la seleccionamos para el formulario
-    this.newExceptionDate = date;
-    console.log('Fecha seleccionada para excepción:', date);
+    const newId = Date.now();
+
+    const year = this.newExceptionDate.getFullYear();
+    const month = this.newExceptionDate.getMonth() + 1;
+    const day = this.newExceptionDate.getDate();
+
+    const formattedMonth = String(month).padStart(2, '0');
+    const formattedDay = String(day).padStart(2, '0');
+
+    const localDateString = `${year}-${formattedMonth}-${formattedDay}`;
+
+    const newException: Exception = {
+      id: newId,
+      date: localDateString,
+      reason: this.newExceptionReason.trim()
+    };
+
+    this.exceptions.update(exceptions => [...exceptions, newException]);
+
+    this.newExceptionReason = '';
+    this.newExceptionDate = null;
+    this.showGlobalForm.set(false);
+    this.activeDay.set(false);
+    this.day.set(null);
+
+    this.refresh.next();
+    this.cdr.detectChanges();
   }
 
-  // ⬇️ Nuevo: Agregar una excepción ⬇️
-  addException(): void {
-    if (this.newExceptionDate && this.newExceptionReason) {
-      const dateString = this.newExceptionDate.toISOString().split('T')[0];
-      const newId = this.exceptions().length > 0 ? Math.max(...this.exceptions().map(e => e.id)) + 1 : 1;
+  removeException(eventId: string | number | undefined): void {
 
-      this.exceptions.update(exceptions => [
-        ...exceptions,
-        { id: newId, date: dateString, reason: this.newExceptionReason }
-      ]);
-
-      this.newExceptionDate = null;
-      this.newExceptionReason = '';
-      this.viewDate.set(new Date(dateString)); // Mantiene el calendario en la fecha
+    if (eventId === undefined || eventId === null) {
+      console.warn("Intento de eliminar una excepción con ID nulo o indefinido.");
+      return;
     }
-  }
 
-  // ⬇️ Nuevo: Eliminar una excepción ⬇️
-  removeException(eventId: number): void {
-    this.exceptions.update(exceptions => exceptions.filter(e => e.id !== eventId));
+    const numericId = typeof eventId === 'string' ? parseInt(eventId, 10) : eventId;
+
+    this.exceptions.update(currentExceptions => {
+      const updatedExceptions = currentExceptions.filter(
+        exception => exception.id !== numericId
+      );
+
+      const currentActiveDay = this.day();
+      if (currentActiveDay) {
+        const remainingEvents = this.calendarEvents().filter(e =>
+          isSameDay(e.start, currentActiveDay) && e.id !== numericId
+        );
+
+        if (remainingEvents.length === 0) {
+          this.activeDay.set(false);
+          this.day.set(null);
+        }
+      }
+
+      return updatedExceptions;
+    });
+
+    this.refresh.next();
+    this.cdr.detectChanges();
   }
 
   closeModal(): void {
@@ -131,18 +203,10 @@ export class ScheduleModal {
     this.modalClosed.emit();
   }
 
-  /**
-   * Maneja la lógica de guardar los horarios recurrentes y las excepciones.
-   * Por ahora, solo simula el guardado y cierra el modal.
-   */
   saveSchedule(): void {
-    console.log('Horario Recurrente a guardar:', this.schedule);
     console.log('Excepciones a guardar:', this.exceptions());
 
-    // NOTA: Aquí iría la llamada a un servicio para persistir los datos
-    // Ejemplo: this.scheduleService.updateSchedule(this.schedule, this.exceptions());
-
     alert('Configuración de horario guardada exitosamente!');
-    this.closeModal(); // Cierra el modal después de guardar
+    this.closeModal();
   }
 }
