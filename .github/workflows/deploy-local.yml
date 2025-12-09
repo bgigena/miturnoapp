@@ -14,12 +14,23 @@ jobs:
     defaults:
       run:
         shell: pwsh
+    env:
+      COMPOSE_FILE: ${{ vars.COMPOSE_FILE }}
+      TUNNEL_TOKEN: ${{ secrets.TUNNEL_TOKEN }}
 
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
           ref: ${{ github.event.inputs.branch }}
+
+      - name: Verify Configuration
+        run: |
+          if (-not $env:COMPOSE_FILE) {
+            Write-Error "COMPOSE_FILE variable is missing. Check Repository Variables."
+            exit 1
+          }
+          Write-Host "COMPOSE_FILE is set to: $env:COMPOSE_FILE"
 
       - name: Verify Docker is Running
         run: |
