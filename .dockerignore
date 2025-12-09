@@ -1,0 +1,25 @@
+# Git
+.git
+.gitignore
+
+# Node
+node_modules
+npm-debug.log
+yarn-error.log
+
+# Angular
+.angular/
+dist/
+tmp/
+out-tsc/
+bazel-out/
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.swp
+.DS_Store
+
+# OS
+Thumbs.db
