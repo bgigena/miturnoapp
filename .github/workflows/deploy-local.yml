@@ -1,0 +1,47 @@
+name: Deploy to Local Docker Desktop
+
+on:
+  workflow_dispatch:
+    inputs:
+      branch:
+        description: 'Branch to deploy'
+        required: true
+        default: 'main'
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, Windows, x64]
+    defaults:
+      run:
+        shell: pwsh
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.inputs.branch }}
+
+      - name: Verify Docker is Running
+        run: |
+          try {
+            docker version
+          } catch {
+            Write-Error "Docker is not running or accessible. Please make sure Docker Desktop is started."
+            exit 1
+          }
+
+      - name: Tear Down Existing Service
+        run: docker compose down --remove-orphans
+        continue-on-error: true
+
+      - name: Deploy New Version
+        run: docker compose up -d --build --force-recreate
+
+      - name: Show Status
+        run: docker compose ps
+
+      - name: Display Tunnel Logs (Optional)
+        run: |
+          Write-Host "Waiting a few seconds for tunnel to initialize..."
+          Start-Sleep -Seconds 5
+          docker compose logs --tail=20 tunnel
