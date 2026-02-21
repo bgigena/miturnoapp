@@ -1,0 +1,27 @@
+/* Asumimos que 30 minutos = 3rem de ancho en el eje horizontal */
+/* La unidad 'min-w-[3rem]' en el HTML ayuda a esto */
+
+.schedule-grid-container {
+    /* Permite el scroll horizontal en móvil */
+    white-space: nowrap; 
+}
+
+.time-segment {
+    /* Define el ancho base de la unidad de tiempo (ej: 30 minutos) */
+    /* Asegúrate de que esto coincida con la lógica de tu componente.ts */
+    width: 3rem; 
+    /* El total de la grilla será la suma de todos los .time-segment */
+}
+
+.appointments-row {
+    /* Fila donde se ubican los turnos */
+    position: relative;
+    /* La altura debe ser suficiente para albergar la tarjeta del turno */
+    height: 6rem; /* Ajusta según el tamaño de tu tarjeta */
+}
+
+/* Nota: Los cálculos [style.left.rem] y [style.width] en el HTML 
+   son CRÍTICOS para posicionar y dimensionar correctamente los bloques.
+   Necesitas implementar `getStartTimeOffset` y `getAppointmentWidth` 
+   en el componente .ts.
+*/
