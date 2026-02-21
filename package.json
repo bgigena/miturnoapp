@@ -29,6 +29,7 @@
     "@angular/common": "^21.0.0",
     "@angular/compiler": "^21.0.0",
     "@angular/core": "^21.0.0",
+    "@angular/fire": "^20.0.1",
     "@angular/forms": "^21.0.0",
     "@angular/platform-browser": "^21.0.0",
     "@angular/platform-server": "^21.0.0",
@@ -37,6 +38,7 @@
     "angular-calendar": "^0.32.0",
     "date-fns": "^4.1.0",
     "express": "^5.1.0",
+    "firebase": "^12.9.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0"
   },
