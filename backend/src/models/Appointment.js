@@ -1,70 +1,103 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 class Appointment {
   static async findAllByProvider(providerId, date) {
-    let query = `
-      SELECT t.*, c.nombre as cliente_nombre, c.apellido as cliente_apellido, s.nombre as servicio_nombre
-      FROM turnos t
-      JOIN clientes c ON t.cliente_id = c.id
-      JOIN servicios s ON t.servicio_id = s.id
-      WHERE t.proveedor_id = ?
-    `;
-    const params = [providerId];
-
+    const where = { proveedor_id: providerId };
+    
     if (date) {
-      query += ' AND DATE(t.fecha_hora_inicio) = ?';
-      params.push(date);
+      // Create date bounds for the whole day
+      const startDate = new Date(date);
+      // We assume "date" is a YYYY-MM-DD string, so appending "T00:00:00" ensures local timezone parsing consistency if needed,
+      // but let's just use it as is and add 1 day.
+      const endDate = new Date(startDate);
+      endDate.setDate(endDate.getDate() + 1);
+      
+      where.fecha_hora_inicio = {
+        gte: startDate,
+        lt: endDate
+      };
     }
 
-    query += ' ORDER BY t.fecha_hora_inicio ASC';
+    const turnos = await prisma.turno.findMany({
+      where,
+      orderBy: { fecha_hora_inicio: 'asc' },
+      include: {
+        Cliente: true,
+        Servicio: true
+      }
+    });
 
-    const [rows] = await db.execute(query, params);
-    return rows;
+    // Mapeamos a la estructura plana original que devolvía el SQL crudo
+    return turnos.map(t => ({
+      ...t,
+      cliente_nombre: t.Cliente.nombre,
+      cliente_apellido: t.Cliente.apellido,
+      servicio_nombre: t.Servicio.nombre
+    }));
   }
 
   static async findAllByClient(clientId) {
-    const [rows] = await db.execute(`
-      SELECT t.*, p.nombre_negocio as proveedor_nombre, s.nombre as servicio_nombre
-      FROM turnos t
-      JOIN proveedores p ON t.proveedor_id = p.id
-      JOIN servicios s ON t.servicio_id = s.id
-      WHERE t.cliente_id = ?
-      ORDER BY t.fecha_hora_inicio DESC
-    `, [clientId]);
-    return rows;
+    const turnos = await prisma.turno.findMany({
+      where: { cliente_id: clientId },
+      orderBy: { fecha_hora_inicio: 'desc' },
+      include: {
+        Proveedor: true,
+        Servicio: true
+      }
+    });
+
+    return turnos.map(t => ({
+      ...t,
+      proveedor_nombre: t.Proveedor.nombre_negocio,
+      servicio_nombre: t.Servicio.nombre
+    }));
   }
 
   static async findById(id) {
-    const [rows] = await db.execute('SELECT * FROM turnos WHERE id = ?', [id]);
-    return rows[0];
+    return await prisma.turno.findUnique({
+      where: { id: parseInt(id, 10) }
+    });
   }
 
   static async checkOverlap(proveedorId, start, end) {
-    const [rows] = await db.execute(`
-      SELECT * FROM turnos 
-      WHERE proveedor_id = ? 
-      AND estado != 'CANCELADO'
-      AND (
-        (fecha_hora_inicio < ? AND fecha_hora_fin > ?)
-      )
-    `, [proveedorId, end, start]);
-    return rows.length > 0;
+    const overlaps = await prisma.turno.findMany({
+      where: {
+        proveedor_id: proveedorId,
+        estado: { not: 'CANCELADO' },
+        AND: [
+          { fecha_hora_inicio: { lt: new Date(end) } },
+          { fecha_hora_fin: { gt: new Date(start) } }
+        ]
+      }
+    });
+    return overlaps.length > 0;
   }
 
   static async create(appointmentData) {
     const { cliente_id, proveedor_id, servicio_id, fecha_hora_inicio, fecha_hora_fin, notas, create_by } = appointmentData;
-    const [result] = await db.execute(
-      'INSERT INTO turnos (cliente_id, proveedor_id, servicio_id, fecha_hora_inicio, fecha_hora_fin, notas, create_by) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [cliente_id, proveedor_id, servicio_id, fecha_hora_inicio, fecha_hora_fin, notas, create_by]
-    );
-    return result.insertId;
+    
+    const result = await prisma.turno.create({
+      data: {
+        cliente_id,
+        proveedor_id,
+        servicio_id,
+        fecha_hora_inicio: new Date(fecha_hora_inicio),
+        fecha_hora_fin: new Date(fecha_hora_fin),
+        notas,
+        create_by
+      }
+    });
+    return result.id;
   }
 
   static async updateStatus(id, status, modify_by) {
-    await db.execute(
-      'UPDATE turnos SET estado = ?, modify_by = ? WHERE id = ?',
-      [status, modify_by, id]
-    );
+    await prisma.turno.update({
+      where: { id: parseInt(id, 10) },
+      data: {
+        estado: status,
+        modify_by
+      }
+    });
   }
 }
 

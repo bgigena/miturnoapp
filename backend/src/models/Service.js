@@ -1,35 +1,48 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 class Service {
   static async findAll() {
-    const [rows] = await db.execute('SELECT * FROM servicios WHERE activo = TRUE');
-    return rows;
+    return await prisma.servicio.findMany({
+      where: { activo: true }
+    });
   }
 
   static async findById(id) {
-    const [rows] = await db.execute('SELECT * FROM servicios WHERE id = ?', [id]);
-    return rows[0];
+    return await prisma.servicio.findUnique({
+      where: { id: parseInt(id, 10) }
+    });
   }
 
   static async create(serviceData) {
     const { nombre, duracion_minutos, precio_base } = serviceData;
-    const [result] = await db.execute(
-      'INSERT INTO servicios (nombre, duracion_minutos, precio_base) VALUES (?, ?, ?)',
-      [nombre, duracion_minutos, precio_base]
-    );
-    return result.insertId;
+    const result = await prisma.servicio.create({
+      data: {
+        nombre,
+        duracion_minutos: parseInt(duracion_minutos, 10),
+        precio_base
+      }
+    });
+    return result.id;
   }
 
   static async update(id, serviceData) {
     const { nombre, duracion_minutos, precio_base, activo } = serviceData;
-    await db.execute(
-      'UPDATE servicios SET nombre = ?, duracion_minutos = ?, precio_base = ?, activo = ? WHERE id = ?',
-      [nombre, duracion_minutos, precio_base, activo, id]
-    );
+    await prisma.servicio.update({
+      where: { id: parseInt(id, 10) },
+      data: {
+        nombre,
+        duracion_minutos: parseInt(duracion_minutos, 10),
+        precio_base,
+        activo
+      }
+    });
   }
 
   static async delete(id) {
-    await db.execute('UPDATE servicios SET activo = FALSE WHERE id = ?', [id]);
+    await prisma.servicio.update({
+      where: { id: parseInt(id, 10) },
+      data: { activo: false }
+    });
   }
 }
 

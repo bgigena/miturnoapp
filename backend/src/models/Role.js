@@ -1,14 +1,16 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 class Role {
   static async findByName(name) {
-    const [rows] = await db.execute('SELECT * FROM roles WHERE nombre = ?', [name]);
-    return rows[0];
+    return await prisma.role.findUnique({
+      where: { nombre: name }
+    });
   }
 
   static async findById(id) {
-    const [rows] = await db.execute('SELECT * FROM roles WHERE id = ?', [id]);
-    return rows[0];
+    return await prisma.role.findUnique({
+      where: { id: parseInt(id, 10) }
+    });
   }
 }
 

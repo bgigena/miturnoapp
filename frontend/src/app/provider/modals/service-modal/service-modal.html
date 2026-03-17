@@ -1,41 +1,79 @@
-@if(isModalVisible()){
-<div id="modal-servicios" 
-     class="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+<p-dialog 
+    header="Gestión de Servicio" 
+    [visible]="isModalVisible()" 
+    (visibleChange)="!$event ? closeModal() : null" 
+    [modal]="true" 
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '450px' }"
+    styleClass="p-fluid">
     
-    <div class="bg-white card w-full max-w-lg">
+    <ng-template pTemplate="header">
+        <div class="flex flex-col">
+            <span class="text-xl font-bold text-gray-900">Gestión de Servicio</span>
+            <span class="text-sm text-gray-500 mt-1">Añade o edita los servicios que ofreces.</span>
+        </div>
+    </ng-template>
+
+    <form (ngSubmit)="saveService()" class="mt-4 space-y-5">
         
-        <h3 class="text-2xl font-bold mb-4">Gestión de Servicios</h3>
-        <p class="text-sm text-gray-600 mb-6">Añade o edita los servicios que ofreces.</p>
+        <!-- Nombre -->
+        <div class="flex flex-col gap-2">
+            <label for="serviceName" class="text-sm font-medium text-gray-700">Nombre del Servicio</label>
+            <input 
+                pInputText 
+                id="serviceName" 
+                [(ngModel)]="service.name" 
+                name="name" 
+                placeholder="Ej: Corte Clásico" 
+                required 
+                autofocus />
+        </div>
         
-        <form (ngSubmit)="saveService()" class="space-y-4">
-            
-            <div>
-                <label for="serviceName" class="block text-sm font-medium text-gray-700">Nombre del Servicio</label>
-                <input type="text" id="serviceName" placeholder="Corte Clásico" required
-                       class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
+        <div class="flex gap-4">
+            <!-- Duración -->
+            <div class="flex flex-col gap-2 flex-1">
+                <label for="duration" class="text-sm font-medium text-gray-700">Duración</label>
+                <p-inputNumber 
+                    inputId="duration" 
+                    [(ngModel)]="service.duration" 
+                    name="duration" 
+                    suffix=" min" 
+                    [min]="5" 
+                    [step]="5" 
+                    [showButtons]="true">
+                </p-inputNumber>
             </div>
-            
-            <div class="flex space-x-4">
-                <div class="flex-1">
-                    <label for="duration" class="block text-sm font-medium text-gray-700">Duración (min)</label>
-                    <input type="number" id="duration" value="45" required
-                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
-                </div>
-                <div class="flex-1">
-                    <label for="price" class="block text-sm font-medium text-gray-700">Precio Total ($)</label>
-                    <input type="number" id="price" value="10000" required
-                           class="mt-1 block w-full border border-gray-300 rounded-lg shadow-sm p-2">
-                </div>
+
+            <!-- Precio -->
+            <div class="flex flex-col gap-2 flex-1">
+                <label for="price" class="text-sm font-medium text-gray-700">Precio Total</label>
+                <p-inputNumber 
+                    inputId="price" 
+                    [(ngModel)]="service.price" 
+                    name="price" 
+                    mode="currency" 
+                    currency="ARS" 
+                    locale="es-AR" 
+                    [min]="0">
+                </p-inputNumber>
             </div>
-            
-            <button type="submit" class="w-full bg-indigo-600 text-white p-3 rounded-xl hover:bg-indigo-700 transition font-medium">
-                Guardar Servicio
-            </button>
-        </form>
-        
-        <button (click)="closeModal()" class="mt-6 w-full text-gray-600 border border-gray-200 p-2 rounded-xl hover:bg-gray-100 transition">
-            Cerrar
-        </button>
-    </div>
-</div>
-}
+        </div>
+
+        <div class="flex justify-end gap-3 mt-8 pt-4 border-t border-gray-100">
+            <p-button 
+                label="Cancelar" 
+                icon="pi pi-times" 
+                [text]="true" 
+                severity="secondary" 
+                (onClick)="closeModal()">
+            </p-button>
+            <p-button 
+                type="submit" 
+                label="Guardar Servicio" 
+                icon="pi pi-check" 
+                [disabled]="!service.name">
+            </p-button>
+        </div>
+    </form>
+</p-dialog>

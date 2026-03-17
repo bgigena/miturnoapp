@@ -3,6 +3,12 @@ import { Component, signal, inject, OnInit, effect } from '@angular/core';
 import { AppointmentService, Appointment as BackendAppointment } from '../../../service/appointment.service';
 import { format } from 'date-fns';
 
+// PrimeNG imports
+import { ButtonModule } from 'primeng/button';
+import { TagModule } from 'primeng/tag';
+import { TooltipModule } from 'primeng/tooltip';
+import { CardModule } from 'primeng/card';
+
 // Definición de la estructura de un Turno (Mapped for UI)
 interface AppointmentUI {
   id: number;
@@ -17,7 +23,13 @@ interface AppointmentUI {
 @Component({
   selector: 'app-daily-agenda',
   standalone: true,
-  imports: [CommonModule],
+  imports: [
+    CommonModule,
+    ButtonModule,
+    TagModule,
+    TooltipModule,
+    CardModule
+  ],
   templateUrl: './daily-agenda.html',
   styleUrl: './daily-agenda.css',
 })
@@ -88,21 +100,24 @@ export class DailyAgenda implements OnInit {
     this.currentDate.set(newDate);
   }
 
-  // Método para obtener clases dinámicas según el estado
-  getAppointmentClasses(status: AppointmentUI['status']): string {
+  // Helper properties for UI
+  getSeverity(status: AppointmentUI['status']): 'success' | 'danger' | 'info' | 'warn' | 'secondary' {
     switch (status) {
-      case 'confirmed':
-        return 'border-green-400 bg-green-50 text-green-900';
-      case 'cancelled':
-        return 'border-red-400 bg-red-50 text-red-900';
-      case 'pending':
-        return 'border-yellow-400 bg-yellow-50 text-yellow-900';
-      case 'available':
-        return 'border-gray-300 bg-gray-50 text-gray-700 hover:shadow-md';
-      case 'completed':
-        return 'border-gray-400 bg-gray-200 text-gray-800';
-      default:
-        return 'border-gray-300 bg-white text-gray-900';
+        case 'confirmed': return 'success';
+        case 'cancelled': return 'danger';
+        case 'completed': return 'info';
+        case 'pending': return 'warn';
+        default: return 'secondary';
+    }
+  }
+
+  getStatusLabel(status: AppointmentUI['status']): string {
+    switch (status) {
+        case 'confirmed': return 'Confirmado';
+        case 'cancelled': return 'Cancelado';
+        case 'completed': return 'Completado';
+        case 'pending': return 'Pendiente';
+        default: return 'Disponible';
     }
   }
 }

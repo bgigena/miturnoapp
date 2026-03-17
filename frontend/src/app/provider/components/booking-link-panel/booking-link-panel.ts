@@ -1,10 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+
 @Component({
   selector: 'app-booking-link-panel',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, CardModule, ButtonModule],
   templateUrl: './booking-link-panel.html',
   styleUrl: './booking-link-panel.css',
 })

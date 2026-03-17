@@ -1,9 +1,14 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectionStrategy, ChangeDetectorRef, Component, computed, inject, input, output, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { CalendarModule, CalendarEvent, CalendarMonthViewDay } from 'angular-calendar';
+import { CalendarModule as AngularCalendarModule, CalendarEvent, CalendarMonthViewDay } from 'angular-calendar';
 import { startOfDay, isSameDay, addMonths, subMonths } from 'date-fns';
 import { Subject } from 'rxjs';
+
+// PrimeNG imports
+import { DialogModule } from 'primeng/dialog';
+import { ButtonModule } from 'primeng/button';
+import { InputTextModule } from 'primeng/inputtext';
 
 // Definición de la estructura de datos
 interface Exception {
@@ -14,7 +19,14 @@ interface Exception {
 @Component({
   selector: 'app-schedule-modal',
   standalone: true,
-  imports: [CommonModule, FormsModule, CalendarModule],
+  imports: [
+    CommonModule, 
+    FormsModule, 
+    AngularCalendarModule,
+    DialogModule,
+    ButtonModule,
+    InputTextModule
+  ],
   templateUrl: './schedule-modal.html',
   styleUrl: './schedule-modal.css',
   changeDetection: ChangeDetectionStrategy.OnPush,

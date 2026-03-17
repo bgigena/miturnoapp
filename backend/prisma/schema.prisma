@@ -1,0 +1,198 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Role {
+  id      Int      @id @default(autoincrement())
+  nombre  String   @unique @db.VarChar(50)
+  Usuario Usuario[]
+
+  @@map("roles")
+}
+
+model Usuario {
+  id               Int       @id @default(autoincrement())
+  email            String    @unique @db.VarChar(255)
+  password_hash    String    @db.VarChar(255)
+  role_id          Int
+  activo           Boolean   @default(true)
+  created_at       DateTime? @default(now()) @db.Timestamp(0)
+  modified_at      DateTime? @updatedAt @db.Timestamp(0)
+  
+  Role             Role      @relation(fields: [role_id], references: [id])
+  Proveedor        Proveedor[]
+  
+  // Relations for Cliente
+  Cliente          Cliente[] @relation("UsuarioToCliente")
+  ClienteCreador   Cliente[] @relation("UsuarioCreaCliente")
+  ClienteModificador Cliente[] @relation("UsuarioModificaCliente")
+
+  // Relations for Turno
+  TurnoCreador     Turno[]   @relation("UsuarioCreaTurno")
+  TurnoModificador Turno[]   @relation("UsuarioModificaTurno")
+
+  Feriado          Feriado[]
+
+  @@map("usuarios")
+}
+
+model Proveedor {
+  id               Int       @id @default(autoincrement())
+  usuario_id       Int
+  nombre_negocio   String    @db.VarChar(100)
+  telefono_contacto String?   @db.VarChar(20)
+  create_date      DateTime? @default(now()) @db.Timestamp(0)
+  modify_date      DateTime? @updatedAt @db.Timestamp(0)
+  
+  Usuario          Usuario   @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
+  
+  HorarioAtencion  HorarioAtencion[]
+  ProveedorServicio ProveedorServicio[]
+  ExcepcionHorario  ExcepcionHorario[]
+  Turno            Turno[]
+
+  @@map("proveedores")
+}
+
+model HorarioAtencion {
+  id           Int       @id @default(autoincrement())
+  proveedor_id Int
+  dia_semana   Int       @db.TinyInt // 0 (Dom) a 6 (Sab)
+  hora_apertura DateTime  @db.Time
+  hora_cierre  DateTime  @db.Time
+
+  Proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
+
+  @@map("horarios_atencion")
+}
+
+model Servicio {
+  id               Int       @id @default(autoincrement())
+  nombre           String    @db.VarChar(100)
+  duracion_minutos Int
+  precio_base      Decimal   @db.Decimal(10, 2)
+  activo           Boolean   @default(true)
+  create_date      DateTime? @default(now()) @db.Timestamp(0)
+  modify_date      DateTime? @updatedAt @db.Timestamp(0)
+
+  ProveedorServicio ProveedorServicio[]
+  Turno            Turno[]
+
+  @@map("servicios")
+}
+
+model ProveedorServicio {
+  proveedor_id      Int
+  servicio_id       Int
+  precio_especifico Decimal? @db.Decimal(10, 2)
+
+  Proveedor         Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
+  Servicio          Servicio  @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
+
+  @@id([proveedor_id, servicio_id])
+  @@map("proveedor_servicios")
+}
+
+model Cliente {
+  id           Int       @id @default(autoincrement())
+  usuario_id   Int
+  nombre       String    @db.VarChar(100)
+  apellido     String?   @db.VarChar(100)
+  telefono     String?   @db.VarChar(20)
+  create_date  DateTime? @default(now()) @db.Timestamp(0)
+  create_by    Int?
+  modify_date  DateTime? @updatedAt @db.Timestamp(0)
+  modify_by    Int?
+
+  Usuario      Usuario   @relation("UsuarioToCliente", fields: [usuario_id], references: [id], onDelete: Cascade)
+  Creador      Usuario?  @relation("UsuarioCreaCliente", fields: [create_by], references: [id])
+  Modificador  Usuario?  @relation("UsuarioModificaCliente", fields: [modify_by], references: [id])
+
+  Turno        Turno[]
+
+  @@map("clientes")
+}
+
+model Feriado {
+  id          Int      @id @default(autoincrement())
+  fecha       DateTime @unique @db.Date
+  descripcion String?  @db.VarChar(100)
+  create_by   Int?
+
+  Usuario     Usuario? @relation(fields: [create_by], references: [id])
+
+  @@map("feriados")
+}
+
+model ExcepcionHorario {
+  id           Int       @id @default(autoincrement())
+  proveedor_id Int
+  fecha_inicio DateTime  @db.DateTime(0)
+  fecha_fin    DateTime  @db.DateTime(0)
+  motivo       String?   @db.VarChar(255)
+
+  Proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
+
+  @@map("excepciones_horario")
+}
+
+enum TurnoEstado {
+  PENDIENTE
+  CONFIRMADO
+  CANCELADO
+  COMPLETADO
+  AUSENTE
+}
+
+model Turno {
+  id                Int       @id @default(autoincrement())
+  cliente_id        Int
+  proveedor_id      Int
+  servicio_id       Int
+  fecha_hora_inicio DateTime  @db.DateTime(0)
+  fecha_hora_fin    DateTime  @db.DateTime(0)
+  estado            TurnoEstado @default(PENDIENTE)
+  notas             String?   @db.Text
+  
+  create_date       DateTime? @default(now()) @db.Timestamp(0)
+  create_by         Int?
+  modify_date       DateTime? @updatedAt @db.Timestamp(0)
+  modify_by         Int?
+
+  Cliente           Cliente   @relation(fields: [cliente_id], references: [id])
+  Proveedor         Proveedor @relation(fields: [proveedor_id], references: [id])
+  Servicio          Servicio  @relation(fields: [servicio_id], references: [id])
+  
+  Creador           Usuario?  @relation("UsuarioCreaTurno", fields: [create_by], references: [id])
+  Modificador       Usuario?  @relation("UsuarioModificaTurno", fields: [modify_by], references: [id])
+  
+  LogsNotificacion  LogNotificacion[]
+
+  @@index([fecha_hora_inicio], name: "idx_turnos_fecha")
+  @@index([estado], name: "idx_turnos_estado")
+  @@map("turnos")
+}
+
+model LogNotificacion {
+  id             Int       @id @default(autoincrement())
+  turno_id       Int
+  tipo_envio     String    @db.VarChar(50)
+  destinatario   String    @db.VarChar(255)
+  fecha_registro DateTime? @default(now()) @db.Timestamp(0)
+  fecha_envio    DateTime? @db.DateTime(0)
+  procesado      Boolean?  @default(false)
+  intentos       Int?      @default(0) @db.TinyInt
+  error_mensaje  String?   @db.Text
+
+  Turno          Turno     @relation(fields: [turno_id], references: [id], onDelete: Cascade)
+
+  @@map("logs_notificaciones")
+}

@@ -1,40 +1,49 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 class Provider {
   static async findAll() {
-    const [rows] = await db.execute(`
-      SELECT p.*, u.email 
-      FROM proveedores p 
-      JOIN usuarios u ON p.usuario_id = u.id
-    `);
-    return rows;
+    const proveedores = await prisma.proveedor.findMany({
+      include: { Usuario: true }
+    });
+    return proveedores.map(p => ({
+      ...p,
+      email: p.Usuario.email
+    }));
   }
 
   static async findById(id) {
-    const [rows] = await db.execute('SELECT * FROM proveedores WHERE id = ?', [id]);
-    return rows[0];
+    return await prisma.proveedor.findUnique({
+      where: { id: parseInt(id, 10) }
+    });
   }
 
   static async findByUserId(userId) {
-    const [rows] = await db.execute('SELECT * FROM proveedores WHERE usuario_id = ?', [userId]);
-    return rows[0];
+    return await prisma.proveedor.findFirst({
+      where: { usuario_id: parseInt(userId, 10) }
+    });
   }
 
   static async create(providerData) {
     const { usuario_id, nombre_negocio, telefono_contacto } = providerData;
-    const [result] = await db.execute(
-      'INSERT INTO proveedores (usuario_id, nombre_negocio, telefono_contacto) VALUES (?, ?, ?)',
-      [usuario_id, nombre_negocio, telefono_contacto]
-    );
-    return result.insertId;
+    const result = await prisma.proveedor.create({
+      data: {
+        usuario_id: parseInt(usuario_id, 10),
+        nombre_negocio,
+        telefono_contacto
+      }
+    });
+    return result.id;
   }
 
   static async update(id, providerData) {
     const { nombre_negocio, telefono_contacto } = providerData;
-    await db.execute(
-      'UPDATE proveedores SET nombre_negocio = ?, telefono_contacto = ? WHERE id = ?',
-      [nombre_negocio, telefono_contacto, id]
-    );
+    await prisma.proveedor.update({
+      where: { id: parseInt(id, 10) },
+      data: {
+        nombre_negocio,
+        telefono_contacto
+      }
+    });
   }
 }
 

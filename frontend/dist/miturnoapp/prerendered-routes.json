@@ -1,0 +1,10 @@
+{
+  "routes": {
+    "/": {},
+    "/customer": {},
+    "/customer/dashboard": {},
+    "/login": {},
+    "/provider": {},
+    "/provider/dashboard": {}
+  }
+}

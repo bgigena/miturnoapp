@@ -7,11 +7,11 @@ export const roleRedirectGuard: CanActivateFn = (route, state) => {
   const router = inject(Router);
   const userRole = authService.getUserRole();
 
-  if (userRole === 'provider') {
+  if (userRole === 'proveedor') {
     return router.createUrlTree(['/provider/dashboard']);
   }
 
-  if (userRole === 'customer') {
+  if (userRole === 'cliente') {
     return router.createUrlTree(['/customer/dashboard']);
   }
 

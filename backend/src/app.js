@@ -26,11 +26,10 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to MiTurnoApp API' });
 });
 
+const errorHandler = require('./middleware/errorHandler');
+
 // Error handling middleware
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ message: 'Something went wrong!' });
-});
+app.use(errorHandler);
 
 const PORT = process.env.PORT || 3000;
 

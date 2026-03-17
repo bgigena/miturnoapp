@@ -1,0 +1,1 @@
+import{Nb as n,Ua as a,qb as s,rb as r}from"./chunk-D7PPL35N.js";var o=class e{static \u0275fac=function(t){return new(t||e)};static \u0275cmp=a({type:e,selectors:[["app-dashboard"]],decls:2,vars:0,template:function(t,m){t&1&&(s(0,"p"),n(1,"dashboard works!"),r())},encapsulation:2})};var l=[{path:"dashboard",component:o,title:"Customer Dashboard"}];export{l as CUSTOMER_ROUTES};

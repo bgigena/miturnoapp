@@ -1,28 +1,41 @@
-const db = require('../config/db');
+const prisma = require('../config/prisma');
 
 class ProviderService {
   static async addServiceToProvider(providerId, serviceId, price) {
-    await db.execute(
-      'INSERT INTO proveedor_servicios (proveedor_id, servicio_id, precio_especifico) VALUES (?, ?, ?)',
-      [providerId, serviceId, price]
-    );
+    await prisma.proveedorServicio.create({
+      data: {
+        proveedor_id: parseInt(providerId, 10),
+        servicio_id: parseInt(serviceId, 10),
+        precio_especifico: price
+      }
+    });
   }
 
   static async removeServiceFromProvider(providerId, serviceId) {
-    await db.execute(
-      'DELETE FROM proveedor_servicios WHERE proveedor_id = ? AND servicio_id = ?',
-      [providerId, serviceId]
-    );
+    await prisma.proveedorServicio.delete({
+      where: {
+        proveedor_id_servicio_id: {
+          proveedor_id: parseInt(providerId, 10),
+          servicio_id: parseInt(serviceId, 10)
+        }
+      }
+    });
   }
 
   static async findByProviderId(providerId) {
-    const [rows] = await db.execute(`
-      SELECT ps.*, s.nombre, s.duracion_minutos, s.precio_base 
-      FROM proveedor_servicios ps
-      JOIN servicios s ON ps.servicio_id = s.id
-      WHERE ps.proveedor_id = ?
-    `, [providerId]);
-    return rows;
+    const servicios = await prisma.proveedorServicio.findMany({
+      where: { proveedor_id: parseInt(providerId, 10) },
+      include: {
+        Servicio: true
+      }
+    });
+
+    return servicios.map(ps => ({
+      ...ps,
+      nombre: ps.Servicio.nombre,
+      duracion_minutos: ps.Servicio.duracion_minutos,
+      precio_base: ps.Servicio.precio_base
+    }));
   }
 }
 

@@ -2,10 +2,13 @@ import { CommonModule } from '@angular/common';
 import { Component } from '@angular/core';
 import { ServiceModal } from '@provider/modals/service-modal/service-modal';
 
+import { CardModule } from 'primeng/card';
+import { ButtonModule } from 'primeng/button';
+
 @Component({
   selector: 'app-service-management-panel',
   standalone: true,
-  imports: [CommonModule,ServiceModal],
+  imports: [CommonModule, ServiceModal, CardModule, ButtonModule],
   templateUrl: './service-management-panel.html',
   styleUrl: './service-management-panel.css',
 })
