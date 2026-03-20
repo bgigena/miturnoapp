@@ -56,6 +56,19 @@ export class AuthService {
     );
   }
 
+  loginWithGoogle(token: string): Observable<AuthResponse> {
+    return this.http.post<AuthResponse>(`${this.apiUrl}/google`, { token }).pipe(
+      tap(response => {
+        if (isPlatformBrowser(this.platformId)) {
+          localStorage.setItem('token', response.token);
+          localStorage.setItem('user', JSON.stringify(response.user));
+          this.currentUserSubject.next(response.user);
+          this.updateRole(response.user.role_id);
+        }
+      })
+    );
+  }
+
   register(data: any): Observable<any> {
     return this.http.post(`${this.apiUrl}/register`, data);
   }
@@ -75,13 +88,16 @@ export class AuthService {
   }
 
   // Helper to map role_id to string role
-  private updateRole(roleId: number) {
-    // Assuming 1: Admin, 2: Proveedor, 3: Cliente based on SQL implication or ensuring this map
+  private updateRole(roleId: any) {
+    console.log('Actualizando rol con roleId:', roleId, 'Tipo:', typeof roleId);
     let role: UserRole = null;
-    if (roleId === 2) role = 'proveedor';
-    else if (roleId === 3) role = 'cliente';
-    else if (roleId === 1) role = 'admin';
+    const id = Number(roleId);
+    
+    if (id === 2) role = 'proveedor';
+    else if (id === 3) role = 'cliente';
+    else if (id === 1) role = 'admin';
 
+    console.log('Rol asignado:', role);
     this.currentRoleSubject.next(role);
   }
 

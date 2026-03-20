@@ -6,13 +6,13 @@ generator client {
 }
 
 datasource db {
-  provider = "mysql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
 model Role {
-  id      Int      @id @default(autoincrement())
-  nombre  String   @unique @db.VarChar(50)
+  id      Int       @id @default(autoincrement())
+  nombre  String    @unique
   Usuario Usuario[]
 
   @@map("roles")
@@ -20,12 +20,12 @@ model Role {
 
 model Usuario {
   id               Int       @id @default(autoincrement())
-  email            String    @unique @db.VarChar(255)
-  password_hash    String    @db.VarChar(255)
+  email            String    @unique
+  password_hash    String
   role_id          Int
   activo           Boolean   @default(true)
-  created_at       DateTime? @default(now()) @db.Timestamp(0)
-  modified_at      DateTime? @updatedAt @db.Timestamp(0)
+  created_at       DateTime? @default(now())
+  modified_at      DateTime? @updatedAt
   
   Role             Role      @relation(fields: [role_id], references: [id])
   Proveedor        Proveedor[]
@@ -47,10 +47,10 @@ model Usuario {
 model Proveedor {
   id               Int       @id @default(autoincrement())
   usuario_id       Int
-  nombre_negocio   String    @db.VarChar(100)
-  telefono_contacto String?   @db.VarChar(20)
-  create_date      DateTime? @default(now()) @db.Timestamp(0)
-  modify_date      DateTime? @updatedAt @db.Timestamp(0)
+  nombre_negocio   String
+  telefono_contacto String?
+  create_date      DateTime? @default(now())
+  modify_date      DateTime? @updatedAt
   
   Usuario          Usuario   @relation(fields: [usuario_id], references: [id], onDelete: Cascade)
   
@@ -65,9 +65,9 @@ model Proveedor {
 model HorarioAtencion {
   id           Int       @id @default(autoincrement())
   proveedor_id Int
-  dia_semana   Int       @db.TinyInt // 0 (Dom) a 6 (Sab)
-  hora_apertura DateTime  @db.Time
-  hora_cierre  DateTime  @db.Time
+  dia_semana   Int       
+  hora_apertura DateTime  
+  hora_cierre  DateTime  
 
   Proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
 
@@ -76,12 +76,12 @@ model HorarioAtencion {
 
 model Servicio {
   id               Int       @id @default(autoincrement())
-  nombre           String    @db.VarChar(100)
+  nombre           String    
   duracion_minutos Int
-  precio_base      Decimal   @db.Decimal(10, 2)
+  precio_base      Decimal   
   activo           Boolean   @default(true)
-  create_date      DateTime? @default(now()) @db.Timestamp(0)
-  modify_date      DateTime? @updatedAt @db.Timestamp(0)
+  create_date      DateTime? @default(now())
+  modify_date      DateTime? @updatedAt 
 
   ProveedorServicio ProveedorServicio[]
   Turno            Turno[]
@@ -92,7 +92,7 @@ model Servicio {
 model ProveedorServicio {
   proveedor_id      Int
   servicio_id       Int
-  precio_especifico Decimal? @db.Decimal(10, 2)
+  precio_especifico Decimal? 
 
   Proveedor         Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
   Servicio          Servicio  @relation(fields: [servicio_id], references: [id], onDelete: Cascade)
@@ -104,12 +104,12 @@ model ProveedorServicio {
 model Cliente {
   id           Int       @id @default(autoincrement())
   usuario_id   Int
-  nombre       String    @db.VarChar(100)
-  apellido     String?   @db.VarChar(100)
-  telefono     String?   @db.VarChar(20)
-  create_date  DateTime? @default(now()) @db.Timestamp(0)
+  nombre       String    
+  apellido     String?   
+  telefono     String?   
+  create_date  DateTime? @default(now()) 
   create_by    Int?
-  modify_date  DateTime? @updatedAt @db.Timestamp(0)
+  modify_date  DateTime? @updatedAt 
   modify_by    Int?
 
   Usuario      Usuario   @relation("UsuarioToCliente", fields: [usuario_id], references: [id], onDelete: Cascade)
@@ -123,8 +123,8 @@ model Cliente {
 
 model Feriado {
   id          Int      @id @default(autoincrement())
-  fecha       DateTime @unique @db.Date
-  descripcion String?  @db.VarChar(100)
+  fecha       DateTime @unique 
+  descripcion String?  
   create_by   Int?
 
   Usuario     Usuario? @relation(fields: [create_by], references: [id])
@@ -135,21 +135,13 @@ model Feriado {
 model ExcepcionHorario {
   id           Int       @id @default(autoincrement())
   proveedor_id Int
-  fecha_inicio DateTime  @db.DateTime(0)
-  fecha_fin    DateTime  @db.DateTime(0)
-  motivo       String?   @db.VarChar(255)
+  fecha_inicio DateTime  
+  fecha_fin    DateTime  
+  motivo       String?   
 
   Proveedor    Proveedor @relation(fields: [proveedor_id], references: [id], onDelete: Cascade)
 
   @@map("excepciones_horario")
-}
-
-enum TurnoEstado {
-  PENDIENTE
-  CONFIRMADO
-  CANCELADO
-  COMPLETADO
-  AUSENTE
 }
 
 model Turno {
@@ -157,14 +149,15 @@ model Turno {
   cliente_id        Int
   proveedor_id      Int
   servicio_id       Int
-  fecha_hora_inicio DateTime  @db.DateTime(0)
-  fecha_hora_fin    DateTime  @db.DateTime(0)
-  estado            TurnoEstado @default(PENDIENTE)
-  notas             String?   @db.Text
+  fecha_hora_inicio DateTime  
+  fecha_hora_fin    DateTime  
+  estado            String    @default("PENDIENTE")
+  precio_cobrado    Decimal?
+  notas             String?   
   
-  create_date       DateTime? @default(now()) @db.Timestamp(0)
+  create_date       DateTime? @default(now()) 
   create_by         Int?
-  modify_date       DateTime? @updatedAt @db.Timestamp(0)
+  modify_date       DateTime? @updatedAt 
   modify_by         Int?
 
   Cliente           Cliente   @relation(fields: [cliente_id], references: [id])
@@ -184,13 +177,13 @@ model Turno {
 model LogNotificacion {
   id             Int       @id @default(autoincrement())
   turno_id       Int
-  tipo_envio     String    @db.VarChar(50)
-  destinatario   String    @db.VarChar(255)
-  fecha_registro DateTime? @default(now()) @db.Timestamp(0)
-  fecha_envio    DateTime? @db.DateTime(0)
+  tipo_envio     String    
+  destinatario   String    
+  fecha_registro DateTime? @default(now()) 
+  fecha_envio    DateTime? 
   procesado      Boolean?  @default(false)
-  intentos       Int?      @default(0) @db.TinyInt
-  error_mensaje  String?   @db.Text
+  intentos       Int?      @default(0) 
+  error_mensaje  String?   
 
   Turno          Turno     @relation(fields: [turno_id], references: [id], onDelete: Cascade)
 

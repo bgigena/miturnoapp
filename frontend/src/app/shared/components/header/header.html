@@ -6,38 +6,57 @@
             <h1 class="text-2xl font-bold">TurnoFácil Pro</h1>
 
             <nav class="hidden md:flex items-center space-x-6 text-sm font-medium">
-                <a routerLink="/provider/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
-                    class="hover:text-indigo-200 transition p-1">
-                    Agenda Diaria
-                </a>
-                <a routerLink="/provider/reports" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
-                    class="hover:text-indigo-200 transition p-1">
-                    Reportes
-                </a>
-                <a routerLink="/provider/settings" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
-                    class="hover:text-indigo-200 transition p-1">
-                    Configuración
-                </a>
+                @if (userRole() === 'admin') {
+                    <a routerLink="/admin/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                        class="hover:text-indigo-200 transition p-1">
+                        Panel General
+                    </a>
+                } @else if (userRole() === 'proveedor') {
+                    <a routerLink="/provider/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                        class="hover:text-indigo-200 transition p-1">
+                        Agenda Diaria
+                    </a>
+                    <a routerLink="/provider/reports" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                        class="hover:text-indigo-200 transition p-1">
+                        Reportes
+                    </a>
+                    <a routerLink="/provider/settings" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                        class="hover:text-indigo-200 transition p-1">
+                        Configuración
+                    </a>
+                } @else if (userRole() === 'cliente') {
+                    <a routerLink="/customer/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                        class="hover:text-indigo-200 transition p-1">
+                        Mis Turnos
+                    </a>
+                    <a routerLink="/customer/booking" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                        class="hover:text-indigo-200 transition p-1">
+                        Nueva Reserva
+                    </a>
+                }
             </nav>
         </div>
 
         <div class="flex items-center space-x-4">
-
-            <span class="text-sm font-light hidden md:inline">Hola, {{ userName }}</span>
+            <span class="text-sm font-light hidden md:inline">Hola, {{ userName() }}</span>
             <button (click)="logout()"
                 class="bg-indigo-600 hover:bg-indigo-500 transition px-3 py-1 rounded-full text-sm hidden md:block">
                 Cerrar Sesión
             </button>
 
             <button (click)="toggleMenu()" class="md:hidden p-2 text-white hover:bg-indigo-600 rounded">
-                <svg *ngIf="!isMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
-                </svg>
-                <svg *ngIf="isMenuOpen" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
-                    viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
-                </svg>
+                @if (!isMenuOpen) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16m-7 6h7" />
+                    </svg>
+                }
+                @if (isMenuOpen) {
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none"
+                        viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                }
             </button>
 
         </div>
@@ -47,21 +66,37 @@
 <div class="md:hidden bg-indigo-700 pb-3 shadow-lg absolute w-full z-10">
     <div class="px-2 pt-2 pb-3 space-y-1">
         <nav class="space-y-1">
-            <a (click)="toggleMenu()" routerLink="/provider/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
-                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
-                Agenda Diaria
-            </a>
-            <a (click)="toggleMenu()" routerLink="/provider/reports" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
-                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
-                Reportes
-            </a>
-            <a (click)="toggleMenu()" routerLink="/provider/settings" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
-                class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
-                Configuración
-            </a>
+            @if (userRole() === 'admin') {
+                <a (click)="toggleMenu()" routerLink="/admin/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
+                    Panel General
+                </a>
+            } @else if (userRole() === 'proveedor') {
+                <a (click)="toggleMenu()" routerLink="/provider/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
+                    Agenda Diaria
+                </a>
+                <a (click)="toggleMenu()" routerLink="/provider/reports" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
+                    Reportes
+                </a>
+                <a (click)="toggleMenu()" routerLink="/provider/settings" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
+                    Configuración
+                </a>
+            } @else if (userRole() === 'cliente') {
+                <a (click)="toggleMenu()" routerLink="/customer/dashboard" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
+                    Mis Turnos
+                </a>
+                <a (click)="toggleMenu()" routerLink="/customer/booking" routerLinkActive="font-extrabold rounded-md bg-indigo-500"
+                    class="block px-3 py-2 rounded-md text-base font-medium text-white hover:bg-indigo-600">
+                    Nueva Reserva
+                </a>
+            }
         </nav>
         <div class="mt-4 pt-2 border-t border-indigo-600">
-            <span class="block px-3 py-2 font-light text-sm text-indigo-200">Hola, {{ userName }}</span>
+            <span class="block px-3 py-2 font-light text-sm text-indigo-200">Hola, {{ userName() }}</span>
 
             <button (click)="logout(); toggleMenu()"
                 class="w-full text-left bg-indigo-600 hover:bg-indigo-500 transition px-3 py-2 text-white rounded-md text-base font-medium mt-1">

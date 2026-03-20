@@ -1,0 +1,163 @@
+<div class="space-y-6">
+  <div>
+    <h1 class="text-3xl font-bold text-gray-900">
+      Panel de Administración
+    </h1>
+    <p class="text-gray-500 mt-1">
+      Resumen general del sistema de turnos
+    </p>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Total Turnos</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">
+            {{ statsData.totalAppointments }}
+          </p>
+          <p class="text-sm text-green-600 mt-2 flex items-center gap-1">
+            <i class="pi pi-chart-line text-sm"></i>
+            +12% vs mes anterior
+          </p>
+        </div>
+        <div class="size-12 bg-indigo-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-calendar text-2xl text-indigo-600"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Comisiones</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">
+            ${{ statsData.commissionRevenue | number }}
+          </p>
+          <p class="text-sm text-gray-500 mt-2">
+            {{ statsData.totalAppointments }} × $500
+          </p>
+        </div>
+        <div class="size-12 bg-green-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-dollar text-2xl text-green-600"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Proveedores</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">
+            {{ statsData.activeProviders }}
+          </p>
+          <p class="text-sm text-green-600 mt-2 flex items-center gap-1">
+            <i class="pi pi-chart-line text-sm"></i>
+            +2 este mes
+          </p>
+        </div>
+        <div class="size-12 bg-purple-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-users text-2xl text-purple-600"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between">
+        <div>
+          <p class="text-sm font-medium text-gray-600">Clientes Activos</p>
+          <p class="text-3xl font-bold text-gray-900 mt-2">
+            {{ statsData.activeClients }}
+          </p>
+          <p class="text-sm text-green-600 mt-2 flex items-center gap-1">
+            <i class="pi pi-chart-line text-sm"></i>
+            +18% este mes
+          </p>
+        </div>
+        <div class="size-12 bg-blue-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-star text-2xl text-blue-600"></i>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Row -->
+  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6 flex items-center gap-2">
+        <i class="pi pi-chart-bar text-indigo-600"></i>
+        Turnos por Proveedor
+      </h3>
+      <div class="space-y-6">
+        @for (provider of providerAppointmentsData; track provider.name) {
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700">{{ provider.name }}</span>
+              <span class="text-sm font-semibold text-gray-900">{{ provider.turnos }} turnos</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-3">
+              <div 
+                class="bg-indigo-600 h-3 rounded-full" 
+                [style.width.%]="provider.percentage"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h3 class="text-lg font-semibold text-gray-900 mb-6">Servicios Más Solicitados</h3>
+      <div class="space-y-6">
+        @for (service of topServicesData; track service.service; let i = $index) {
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-sm font-medium text-gray-700">{{ i + 1 }}. {{ service.service }}</span>
+              <span class="text-sm font-semibold text-gray-900">{{ service.count }} ({{ service.percentage }}%)</span>
+            </div>
+            <div class="w-full bg-gray-100 rounded-full h-3">
+              <div 
+                class="bg-purple-600 h-3 rounded-full" 
+                [style.width.%]="service.percentage"
+              ></div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Transacciones Recientes -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h3 class="text-lg font-semibold text-gray-900 mb-4">
+      Transacciones Recientes
+    </h3>
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">ID Transacción</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Proveedor</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Cliente</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Fecha</th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">Hora</th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-gray-600">Comisión</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (transaction of recentTransactions; track transaction.id) {
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="py-3 px-4 text-sm font-medium text-gray-900">{{ transaction.id }}</td>
+              <td class="py-3 px-4 text-sm text-gray-700">{{ transaction.provider }}</td>
+              <td class="py-3 px-4 text-sm text-gray-700">{{ transaction.client }}</td>
+              <td class="py-3 px-4 text-sm text-gray-700">{{ transaction.date | date:'shortDate' }}</td>
+              <td class="py-3 px-4 text-sm text-gray-700">{{ transaction.time }}</td>
+              <td class="py-3 px-4 text-sm font-semibold text-green-600 text-right">${{ transaction.amount }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

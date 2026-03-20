@@ -29,6 +29,12 @@ export const routes: Routes = [
     loadChildren: () => import('./customer/customer.routes').then(m => m.CUSTOMER_ROUTES),
   },
 
+  // Rutas del Admin
+  {
+    path: 'admin',
+    loadChildren: () => import('./admin/admin.routes').then(m => m.ADMIN_ROUTES),
+  },
+
   // Ruta Catch-all (404) - Siempre al final
   {
     path: '**',

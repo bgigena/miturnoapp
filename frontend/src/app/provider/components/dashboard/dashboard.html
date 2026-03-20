@@ -1,20 +1,249 @@
-<main class="max-w-7xl mx-auto p-4 sm:p-6 lg:p-8">
-    <h2 class="text-3xl font-extrabold text-gray-900 mb-6">Agenda de Hoy: Miércoles 20 Nov</h2>
-
-    <div class="lg:grid lg:grid-cols-3 lg:gap-8">
-
-        <div class="lg:col-span-2">
-            <app-daily-agenda></app-daily-agenda>
-        </div>
-
-        <div class="lg:col-span-1">
-
-            <app-service-management-panel></app-service-management-panel>
-
-            <app-schedule-panel></app-schedule-panel>
-
-            <app-booking-link-panel></app-booking-link-panel>
-        </div>
-
+<div class="space-y-6">
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
+      <p class="text-gray-500 mt-1">
+        {{ today | date:'fullDate' }}
+      </p>
     </div>
-</main>
+  </div>
+
+  <!-- Stats Cards -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+      <div class="flex items-center gap-3">
+        <div class="size-10 bg-indigo-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-calendar text-xl text-indigo-600"></i>
+        </div>
+        <div>
+          <p class="text-sm text-gray-600">Total Turnos</p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ todayStats.totalAppointments }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+      <div class="flex items-center gap-3">
+        <div class="size-10 bg-green-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-check-circle text-xl text-green-600"></i>
+        </div>
+        <div>
+          <p class="text-sm text-gray-600">Completados</p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ todayStats.completed }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+      <div class="flex items-center gap-3">
+        <div class="size-10 bg-yellow-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-exclamation-triangle text-xl text-yellow-600"></i>
+        </div>
+        <div>
+          <p class="text-sm text-gray-600">Pendientes</p>
+          <p class="text-2xl font-bold text-gray-900">
+            {{ todayStats.pending }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+      <div class="flex items-center gap-3">
+        <div class="size-10 bg-emerald-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-dollar text-xl text-emerald-600"></i>
+        </div>
+        <div>
+          <p class="text-sm text-gray-600">Ingresos</p>
+          <p class="text-2xl font-bold text-gray-900">
+            ${{ todayStats.revenue | number }}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-5">
+      <div class="flex items-center gap-3">
+        <div class="size-10 bg-purple-100 rounded-lg flex items-center justify-center">
+          <i class="pi pi-chart-line text-xl text-purple-600"></i>
+        </div>
+        <div>
+          <p class="text-sm text-gray-600">Extras</p>
+          <p class="text-2xl font-bold text-gray-900">
+            ${{ todayStats.extras | number }}
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <!-- Próximos Turnos -->
+    <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">
+          Próximos Turnos
+        </h2>
+        <span class="text-sm text-gray-500">Hoy</span>
+      </div>
+
+      <div class="space-y-3">
+        @for (appointment of upcomingAppointments; track appointment.id) {
+          <div
+            class="border-l-4 rounded-lg p-4"
+            [ngClass]="appointment.status === 'confirmed' ? 'border-green-500 bg-green-50' : 'border-yellow-500 bg-yellow-50'"
+          >
+            <div class="flex items-start justify-between">
+              <div class="flex-1">
+                <div class="flex items-center gap-3 mb-2">
+                  <span class="text-lg font-bold text-gray-900">
+                    {{ appointment.time }}
+                  </span>
+                  <span
+                    class="px-2 py-1 rounded text-xs font-medium"
+                    [ngClass]="appointment.status === 'confirmed' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'"
+                  >
+                    {{ appointment.status === 'confirmed' ? 'Confirmado' : 'Pendiente' }}
+                  </span>
+                </div>
+                <p class="font-semibold text-gray-900">
+                  {{ appointment.clientName }}
+                </p>
+                <p class="text-sm text-gray-600">
+                  {{ appointment.service }}
+                </p>
+                <div class="flex items-center gap-4 mt-2 text-sm text-gray-500">
+                  <span class="flex items-center gap-1">
+                    <i class="pi pi-clock text-sm"></i>
+                    {{ appointment.duration }} min
+                  </span>
+                  <span class="flex items-center gap-1">
+                    <i class="pi pi-dollar text-sm"></i>
+                    {{ appointment.price | number }}
+                  </span>
+                </div>
+              </div>
+
+              <div class="flex flex-col gap-2">
+                <button class="px-3 py-1.5 bg-indigo-600 text-white rounded-lg text-sm font-medium hover:bg-indigo-700">
+                  WhatsApp
+                </button>
+                <button class="px-3 py-1.5 bg-gray-200 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-300">
+                  Detalles
+                </button>
+              </div>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Clientes Frecuentes -->
+    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+      <h2 class="text-xl font-semibold text-gray-900 mb-4 flex items-center gap-2">
+        <i class="pi pi-users text-indigo-600"></i>
+        Clientes Frecuentes
+      </h2>
+
+      <div class="space-y-3">
+        @for (client of frequentClients; track client.name; let i = $index) {
+          <div class="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
+            <div class="size-10 bg-indigo-100 rounded-full flex items-center justify-center font-semibold text-indigo-600">
+              {{ i + 1 }}
+            </div>
+            <div class="flex-1">
+              <p class="font-semibold text-gray-900">{{ client.name }}</p>
+              <p class="text-sm text-gray-500">
+                {{ client.visits }} visitas
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-xs text-gray-500">Última visita</p>
+              <p class="text-sm font-medium text-gray-700">
+                {{ client.lastVisit | date:'dd/MM' }}
+              </p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+  </div>
+
+  <!-- Historial del Día -->
+  <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+      Turnos Completados Hoy
+    </h2>
+
+    <div class="overflow-x-auto">
+      <table class="w-full">
+        <thead>
+          <tr class="border-b border-gray-200">
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">
+              Hora
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">
+              Cliente
+            </th>
+            <th class="text-left py-3 px-4 text-sm font-medium text-gray-600">
+              Servicio
+            </th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-gray-600">
+              Precio
+            </th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-gray-600">
+              Extras
+            </th>
+            <th class="text-right py-3 px-4 text-sm font-medium text-gray-600">
+              Total
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (appointment of completedAppointments; track appointment.id) {
+            <tr class="border-b border-gray-100 hover:bg-gray-50">
+              <td class="py-3 px-4 text-sm font-medium text-gray-900">
+                {{ appointment.time }}
+              </td>
+              <td class="py-3 px-4 text-sm text-gray-700">
+                {{ appointment.clientName }}
+              </td>
+              <td class="py-3 px-4 text-sm text-gray-700">
+                {{ appointment.service }}
+              </td>
+              <td class="py-3 px-4 text-sm text-gray-900 text-right">
+                ${{ appointment.price | number }}
+              </td>
+              <td class="py-3 px-4 text-sm text-purple-600 text-right">
+                {{ appointment.extras > 0 ? '$' + (appointment.extras | number) : '-' }}
+              </td>
+              <td class="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+                ${{ (appointment.price + appointment.extras) | number }}
+              </td>
+            </tr>
+          }
+        </tbody>
+        <tfoot>
+          <tr class="border-t-2 border-gray-300 bg-gray-50">
+            <td colSpan="3" class="py-3 px-4 text-sm font-semibold text-gray-900">
+              TOTAL DEL DÍA
+            </td>
+            <td class="py-3 px-4 text-sm font-semibold text-gray-900 text-right">
+              ${{ todayStats.revenue | number }}
+            </td>
+            <td class="py-3 px-4 text-sm font-semibold text-purple-600 text-right">
+              ${{ todayStats.extras | number }}
+            </td>
+            <td class="py-3 px-4 text-sm font-bold text-gray-900 text-right">
+              ${{ (todayStats.revenue + todayStats.extras) | number }}
+            </td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+  </div>
+</div>

@@ -21,6 +21,7 @@ app.use('/api/services', require('./routes/serviceRoutes'));
 app.use('/api/providers', require('./routes/providerRoutes'));
 app.use('/api/clients', require('./routes/clientRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 app.get('/', (req, res) => {
   res.json({ message: 'Welcome to MiTurnoApp API' });
